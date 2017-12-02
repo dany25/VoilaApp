@@ -1,0 +1,98 @@
+{
+  "_args": [
+    [
+      {
+        "raw": "com.telerik.plugins.healthkit",
+        "scope": null,
+        "escapedName": "com.telerik.plugins.healthkit",
+        "name": "com.telerik.plugins.healthkit",
+        "rawSpec": "",
+        "spec": "latest",
+        "type": "tag"
+      },
+      "/Users/daniel/Documents/Berkeley/CS294-84-Interactive-Device-Design/Code/VoilaApp"
+    ]
+  ],
+  "_from": "com.telerik.plugins.healthkit@latest",
+  "_id": "com.telerik.plugins.healthkit@0.5.5",
+  "_inCache": true,
+  "_location": "/com.telerik.plugins.healthkit",
+  "_nodeVersion": "6.10.3",
+  "_npmOperationalInternal": {
+    "host": "s3://npm-registry-packages",
+    "tmp": "tmp/com.telerik.plugins.healthkit-0.5.5.tgz_1503472669851_0.510352746816352"
+  },
+  "_npmUser": {
+    "name": "eddyverbruggen",
+    "email": "eddyverbruggen@gmail.com"
+  },
+  "_npmVersion": "3.10.10",
+  "_phantomChildren": {},
+  "_requested": {
+    "raw": "com.telerik.plugins.healthkit",
+    "scope": null,
+    "escapedName": "com.telerik.plugins.healthkit",
+    "name": "com.telerik.plugins.healthkit",
+    "rawSpec": "",
+    "spec": "latest",
+    "type": "tag"
+  },
+  "_requiredBy": [
+    "#USER",
+    "/"
+  ],
+  "_resolved": "https://registry.npmjs.org/com.telerik.plugins.healthkit/-/com.telerik.plugins.healthkit-0.5.5.tgz",
+  "_shasum": "c19d82681bb1825691fe3c3b842b90b33ca95fdf",
+  "_shrinkwrap": null,
+  "_spec": "com.telerik.plugins.healthkit",
+  "_where": "/Users/daniel/Documents/Berkeley/CS294-84-Interactive-Device-Design/Code/VoilaApp",
+  "author": {
+    "name": "Telerik / Eddy Verbruggen",
+    "email": "eddyverbruggen@gmail.com",
+    "url": "https://github.com/EddyVerbruggen"
+  },
+  "cordova_name": "HealthKit",
+  "dependencies": {},
+  "description": "Interact with the iOS HealthKit SDK.",
+  "devDependencies": {},
+  "directories": {},
+  "dist": {
+    "shasum": "c19d82681bb1825691fe3c3b842b90b33ca95fdf",
+    "tarball": "https://registry.npmjs.org/com.telerik.plugins.healthkit/-/com.telerik.plugins.healthkit-0.5.5.tgz"
+  },
+  "engines": [
+    {
+      "name": "cordova",
+      "version": ">=3.0.0"
+    }
+  ],
+  "gitHead": "d6d748722b34ee47a5605afaf5ffa4452f815e3f",
+  "issue": "https://github.com/Telerik-Verified-Plugins/HealthKit/issues",
+  "keywords": [
+    "Health",
+    "HealthKit",
+    "Fit",
+    "Fitness",
+    "Birthdate",
+    "Gender",
+    "Height",
+    "Weight",
+    "Workout"
+  ],
+  "license": "MIT",
+  "maintainers": [
+    {
+      "name": "eddyverbruggen",
+      "email": "eddyverbruggen@gmail.com"
+    }
+  ],
+  "name": "com.telerik.plugins.healthkit",
+  "optionalDependencies": {},
+  "platforms": [
+    "ios"
+  ],
+  "readme": "ERROR: No README data found!",
+  "repo": "https://github.com/Telerik-Verified-Plugins/HealthKit.git",
+  "scripts": {},
+  "version": "0.5.5"
+}

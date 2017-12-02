@@ -1,0 +1,5 @@
+{
+    "CoreBluetooth.framework": 1,
+    "HealthKit.framework": 1,
+    "CoreLocation.framework": 1
+}

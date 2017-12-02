@@ -1,0 +1,31 @@
+{
+  "prepare_queue": {
+    "installed": [],
+    "uninstalled": []
+  },
+  "config_munge": {
+    "files": {}
+  },
+  "installed_plugins": {
+    "cordova-plugin-whitelist": {
+      "PACKAGE_NAME": "com.voila.VoilaApp"
+    },
+    "cordova-plugin-ble-central": {
+      "BLUETOOTH_USAGE_DESCRIPTION": " ",
+      "PACKAGE_NAME": "com.voila.VoilaApp"
+    },
+    "com.telerik.plugins.healthkit": {
+      "HEALTH_READ_PERMISSION": "App needs read access",
+      "HEALTH_WRITE_PERMISSION": "App needs write access",
+      "PACKAGE_NAME": "com.voila.VoilaApp"
+    },
+    "cordova-plugin-geolocation": {
+      "PACKAGE_NAME": "com.voila.VoilaApp"
+    }
+  },
+  "dependent_plugins": {
+    "cordova-plugin-compat": {
+      "PACKAGE_NAME": "com.voila.VoilaApp"
+    }
+  }
+}
