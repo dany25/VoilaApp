@@ -12,8 +12,12 @@ function onDeviceReady(){
     //***** PARAMETERS *******
     // GLOBAL PARAMETERS
     
+    //DEMO PURPOSE
+    var partOfTheDay = 1;
+    addConsoleMessage("new part of the day: "+partOfTheDay);
+    
     //Data and Data Type Info
-    //1 steps info; 2 temperature; 3 icon weather;
+    //1 steps info; 2 temperature; 3 icon weather; 4//DEMO PURPOSE Part of the day
     
     // HEALTH KIT
     var numberOfPreviousDays = 10; //for steps count data
@@ -37,17 +41,21 @@ function onDeviceReady(){
     
     //***** GLOBAL FUNCTIONS*****
     function onSuccess(result) {
-        alert("Success: " + JSON.stringify(result));
+        addConsoleMessage("Success: " + JSON.stringify(result));
         console.log("Success: " + JSON.stringify(result));
     };
     
     function onError(result) {
-        alert("Error: " + JSON.stringify(result));
+        addConsoleMessage("Error: " + JSON.stringify(result));
         console.log("Error: " + JSON.stringify(result));
     };
     
     function changePicoProStatus(stringMsg){
         document.getElementById("picopro_found").innerHTML = stringMsg;
+    }
+    
+    function addConsoleMessage(stringMsg){
+        document.getElementById("console").innerHTML += "<br>"+ "->  "+stringMsg;
     }
     
     function sendData(dataType,dataValue){
@@ -58,10 +66,11 @@ function onDeviceReady(){
         ble.write(picoProId,
                   serviceUUID,
                   uuid_write,data.buffer,
-                  function(){console.log('success write');
+                  function(){console.log('success write: '+dataType+","+dataValue);
+                  addConsoleMessage('success write: '+dataType+","+dataValue);
                   changePicoProStatus("Connected! Data sent");
                   },
-                  function(){alert('failure write');
+                  function(){addConsoleMessage('failure write: '+dataType+","+dataValue);
                   })
     }
     
@@ -74,6 +83,7 @@ function onDeviceReady(){
     // BLE
     //--> app screen
     changePicoProStatus("Looking for the pico pro ...");
+    addConsoleMessage("Looking for the pico pro ...");
     //--> scan
     ble.isEnabled(
                   function() {
@@ -136,6 +146,18 @@ function onDeviceReady(){
     
     
     // ******* USE PLUGINS ****
+    //DEMO PURPOSE : update part of the day
+    function sendPartOfTheDay(){
+        if (partOfTheDay<4){
+            partOfTheDay +=1;
+        } else{
+            partOfTheDay =1;
+        }
+        console.log("new part of the day: "+partOfTheDay);
+        addConsoleMessage("new part of the day: "+partOfTheDay);
+        sendData(4,partOfTheDay);
+    }
+    
     // HEALTH KIT USE --- number of steps gathering
     function sendHealthData(){
         window.plugins.healthkit.querySampleTypeAggregated(
@@ -165,6 +187,8 @@ function onDeviceReady(){
         console.log("todayNumberOfSteps: "+todayNumberOfSteps);
     };
     
+    //DEMO PURPOSE
+    document.getElementById("changePartOfTheDay").addEventListener("click", function(){sendPartOfTheDay();}, false);
     
     // BLE USE
     document.getElementById("connect").addEventListener("click", function(){connectToPicoPro();}, false);
@@ -197,6 +221,7 @@ function onDeviceReady(){
     function connectSuccess(msg){
         console.log(msg);
         changePicoProStatus("Connected !")
+        addConsoleMessage("Connected !");
         picoProConnected = 1;
         ble.stopScan(function(msg){console.log("success Stop Scan");}, function(msg){console.log("failure Stop Scan");});
         
@@ -221,6 +246,7 @@ function onDeviceReady(){
         
         sendHealthData();
         sendWeatherData();
+    
         
         /*
         console.log("Reading...");
@@ -239,6 +265,7 @@ function onDeviceReady(){
         console.log(msg);
         console.log("Trying again to connect...");
         changePicoProStatus("Connection lost ! ");
+        addConsoleMessage("Connection lost!");
         scanAndStopScan();
     }
     
@@ -268,7 +295,7 @@ function onDeviceReady(){
         };
         
         function onErrorPosition(error) {
-            alert('code: '    + error.code    + '\n' + 'message: ' + error.message + '\n');
+            addConsoleMessage('code: '    + error.code    + '\n' + 'message: ' + error.message + '\n');
         }
     }
     // Success callback for get geo coordinates
