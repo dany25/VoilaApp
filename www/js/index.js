@@ -6,7 +6,7 @@ if (navigator.userAgent.match(/(iPhone|iPod|iPad|Android|BlackBerry)/)) {
 
 
 function onDeviceReady(){
-    
+    document.getElementById("console").innerHTML = "";
     
     
     //***** PARAMETERS *******
