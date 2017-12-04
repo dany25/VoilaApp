@@ -17,14 +17,13 @@ function onDeviceReady(){
     addConsoleMessage("new part of the day: "+partOfTheDay);
     
     //Data and Data Type Info
-    //1 steps info; 2 temperature; 3 icon weather; 4//DEMO PURPOSE Part of the day
+    // data type: 0 milage info; 1 steps info; 2 temperature; 3 icon weather; 4//DEMO PURPOSE Part of the day;
     // Example [dataType, J-x, dataValue]
     // Example [1,0,1234] = 1234 steps today
     // Example [1,2,124] = 124 steps 2 days ago
     
     // HEALTH KIT
     var numberOfPreviousDays = 10; //for steps count data
-    var todayNumberOfSteps = 0;
     
     //BLE
     timeBeforeRescan = 60;//secondes
@@ -173,14 +172,21 @@ function onDeviceReady(){
                                                            onSuccessSteps,
                                                            onErrorSteps
                                                            );
+        window.plugins.healthkit.querySampleTypeAggregated(
+                                                           {
+                                                           'startDate' : new Date(new Date().getTime()-numberOfPreviousDays*24*60*60*1000), // numberOfPreviousDays days ago
+                                                           'endDate'   : new Date(), // now
+                                                           'sampleType': 'HKQuantityTypeIdentifierDistanceWalkingRunning',
+                                                           'unit'      : 'km' // make sure this is compatible with the sampleType
+                                                           },
+                                                           onSuccessKms,
+                                                           onErrorKms
+                                                           );
     }
     
     function onSuccessSteps(result) {
         //alert("Success Steps: " + JSON.stringify(result));
         console.log("Success Steps: " + JSON.stringify(result));
-        //todayNumberOfSteps = Math.round(result[result.length-1].quantity);
-        //console.log("todayNumberOfSteps: "+todayNumberOfSteps);
-        //sendData(1,0,todayNumberOfSteps);
         for (var day=0;day<7;day++){
             sendData(1,day,Math.round(result[result.length-day-1].quantity));
         }
@@ -189,8 +195,21 @@ function onDeviceReady(){
     function onErrorSteps(result) {
         //alert("Error Steps: " + JSON.stringify(result));
         console.log("Error Steps: " + JSON.stringify(result));
-        todayNumberOfSteps = -1;
-        console.log("todayNumberOfSteps: "+todayNumberOfSteps);
+    };
+    
+    function onSuccessKms(result) {
+        //alert("Success Steps: " + JSON.stringify(result));
+        //alert(JSON.stringify(result));
+        console.log("Success Kms: " + JSON.stringify(result));
+        for (var day=0;day<7;day++){
+            sendData(0,day,Math.round(result[result.length-day-1].quantity*10));
+        }
+        
+    };
+    
+    function onErrorKms(result) {
+        //alert("Error Steps: " + JSON.stringify(result));
+        console.log("Error Steps: " + JSON.stringify(result));
     };
     
     //DEMO PURPOSE
