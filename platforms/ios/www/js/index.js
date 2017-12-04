@@ -6,18 +6,21 @@ if (navigator.userAgent.match(/(iPhone|iPod|iPad|Android|BlackBerry)/)) {
 
 
 function onDeviceReady(){
-    
+    document.getElementById("console").innerHTML = "";
     
     
     //***** PARAMETERS *******
     // GLOBAL PARAMETERS
     
     //DEMO PURPOSE
-    var partOfTheDay = 1;
+    var partOfTheDay = 2;
     addConsoleMessage("new part of the day: "+partOfTheDay);
     
     //Data and Data Type Info
     //1 steps info; 2 temperature; 3 icon weather; 4//DEMO PURPOSE Part of the day
+    // Example [dataType, J-x, dataValue]
+    // Example [1,0,1234] = 1234 steps today
+    // Example [1,2,124] = 124 steps 2 days ago
     
     // HEALTH KIT
     var numberOfPreviousDays = 10; //for steps count data
@@ -58,8 +61,8 @@ function onDeviceReady(){
         document.getElementById("console").innerHTML += "<br>"+ "->  "+stringMsg;
     }
     
-    function sendData(dataType,dataValue){
-        var data = intTo8BitArray(dataType,dataValue);
+    function sendData(dataType,dataDay, dataValue){
+        var data = intTo8BitArray(dataType,dataDay,dataValue);
         console.log(JSON.stringify(data));
         console.log(data);
         
@@ -155,7 +158,7 @@ function onDeviceReady(){
         }
         console.log("new part of the day: "+partOfTheDay);
         addConsoleMessage("new part of the day: "+partOfTheDay);
-        sendData(4,partOfTheDay);
+        sendData(4,0,partOfTheDay);
     }
     
     // HEALTH KIT USE --- number of steps gathering
@@ -175,9 +178,12 @@ function onDeviceReady(){
     function onSuccessSteps(result) {
         //alert("Success Steps: " + JSON.stringify(result));
         console.log("Success Steps: " + JSON.stringify(result));
-        todayNumberOfSteps = Math.round(result[result.length-1].quantity);
-        console.log("todayNumberOfSteps: "+todayNumberOfSteps);
-        sendData(1,todayNumberOfSteps);
+        //todayNumberOfSteps = Math.round(result[result.length-1].quantity);
+        //console.log("todayNumberOfSteps: "+todayNumberOfSteps);
+        //sendData(1,0,todayNumberOfSteps);
+        for (var day=0;day<7;day++){
+            sendData(1,day,Math.round(result[result.length-day-1].quantity));
+        }
     };
     
     function onErrorSteps(result) {
@@ -206,15 +212,17 @@ function onDeviceReady(){
     }
     
     //converts an integer into an 8-bit array to communicate it to the PicoPro
-    function intTo8BitArray(intType,intValue){
+    function intTo8BitArray(intType,intDay,intValue){
         var base8 = (intValue).toString(8);
+        var base8Day = (intDay).toString(8);
         var base8Type = (intType).toString(8); // assume it's a single digit
         var lengthArray =base8.length;
-        var eightBitArray = new Uint8Array(lengthArray+1);
-        for (var i =1; i<lengthArray+1;i++){
-            eightBitArray[i]= parseInt(base8[i-1],10);
+        var eightBitArray = new Uint8Array(lengthArray+2);
+        for (var i =2; i<lengthArray+2;i++){
+            eightBitArray[i]= parseInt(base8[i-2],10);
         }
         eightBitArray[0]= parseInt(base8Type[0],10);
+        eightBitArray[1]= parseInt(base8Day[0],10);
         return eightBitArray;
     }
     
@@ -314,12 +322,12 @@ function onDeviceReady(){
                             if (results.main.temp){
                                 todayTemperature = Math.round(results.main.temp);
                             console.log("todayTemperature:"+ todayTemperature);
-                                sendData(2,todayTemperature);
+                                sendData(2,0,todayTemperature);
                             }
                             if (results.weather){
                                 var logoWeatherString = results.weather[0].icon;
                                 indexLogoWeather = logoIndexCorrespondance.indexOf(logoWeatherString);
-                                sendData(3,indexLogoWeather);
+                                sendData(3,0,indexLogoWeather);
                             }
                             
                             
