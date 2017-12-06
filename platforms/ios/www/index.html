@@ -29,21 +29,32 @@
          * Enable inline JS: add 'unsafe-inline' to default-src
          -->
         <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' data: gap: https://ssl.gstatic.com 'unsafe-eval' http://api.openweathermap.org 'unsafe-inline' ; style-src 'self' 'unsafe-inline'; media-src *; img-src 'self' data: content:;">
-            <meta name="format-detection" content="telephone=no">
-                <meta name="msapplication-tap-highlight" content="no">
-                    <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width">
-                        <link rel="stylesheet" type="text/css" href="css/index.css">
-                        <link rel="stylesheet" type="text/css" href="css/jquery.mobile-1.3.2.min.css" />
-                            <title>Hello World</title>
-                            </head>
+        <meta name="format-detection" content="telephone=no">
+        <meta name="msapplication-tap-highlight" content="no">
+        <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width">
+        <link rel="stylesheet" type="text/css" href="css/jquery.mobile-1.3.2.min.css" />
+        <link rel="stylesheet" type="text/css" href="css/index.css">
+        <title>VoilaApp</title>
+    </head>
     <body>
-        <p id="picopro_found" style="font-weight:bold"></p>
-        <button id = "reset"> Reset</button>
-        <button id = "connect"> Connect</button>
-        <button id = "getPosition">Send Weather Data</button>
-        <button id = "changePartOfTheDay">Change Part of The Day</button>
-        <p><b>Debug:</b></p>
-        <p id="console"></p>
+        <div id="warper" style="margin-left:5px;margin-right:5px">
+            <div id="logos_voila" style = "height:46px;width:135px;background-image:url('img/logo_voila.png');background-size: cover;margin:auto;margin-top: 20px"></div>
+            <div id="partOfTheDay" style="color:#2670b7;font-size:18px;position:fixed;right:15px;top:30px;background-color:#b4d5f5;padding:6px;box-shadow: 6px 6px 3px grey;"></div>
+            <p id="picopro_found" style="font-weight:bold"></p>
+            
+            Name: <input id="username" type="text" name="fname" style="z-index: -1;">
+            <button id = "sendName"> Send Name</button><br>
+            <button id = "connect"> Connect</button>
+            <button id = "getPosition">Send Weather Data</button>
+            <button id = "changePartOfTheDay">Change Part of The Day</button><br>
+            <button id = "reset"> Reset</button><br>
+            <button id = "showDebug">Show Debug</button>
+            <div id="debug" style="display:none">
+                <p><b>Debug:</b></p>
+                <p id="console"></p>
+            </div>
+            <div id="logos_health" style = "height:50px;width:184px;background-image:url('img/logos_health.png');background-size: cover;position:fixed;right:10px;bottom:10px"></div>
+        </div>
         
         <script type="text/javascript" src="js/jquery-1.9.1.min.js"></script>
         <script type="text/javascript" src="js/jquery.mobile-1.3.2.min.js"></script>

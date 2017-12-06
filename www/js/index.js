@@ -6,6 +6,7 @@ if (navigator.userAgent.match(/(iPhone|iPod|iPad|Android|BlackBerry)/)) {
 
 
 function onDeviceReady(){
+    
     document.getElementById("console").innerHTML = "";
     
     
@@ -14,10 +15,17 @@ function onDeviceReady(){
     
     //DEMO PURPOSE
     var partOfTheDay = 2;
+    var partOfTheDayCorrespondance = ['Morning','Afternoon','Evening','Night'];
+    document.getElementById("partOfTheDay").innerHTML = partOfTheDayCorrespondance[partOfTheDay-1];
+    var debugShowing = 0;
     addConsoleMessage("new part of the day: "+partOfTheDay);
     
+    // USERNAME
+    var username = "";
+    
     //Data and Data Type Info
-    // data type: 0 milage info; 1 steps info; 2 temperature; 3 icon weather; 4//DEMO PURPOSE Part of the day;
+    dataTypeCorrespondance = ['kms','steps','temp','icon','partDay','username']
+    // data type: 0 kms/milage info; 1 steps info; 2 temperature; 3 icon weather; 4//DEMO PURPOSE Part of the day; 5 name
     // Example [dataType, J-x, dataValue]
     // Example [1,0,1234] = 1234 steps today
     // Example [1,2,124] = 124 steps 2 days ago
@@ -68,12 +76,25 @@ function onDeviceReady(){
         ble.write(picoProId,
                   serviceUUID,
                   uuid_write,data.buffer,
-                  function(){console.log('success write: '+dataType+","+dataValue);
-                  addConsoleMessage('success write: '+dataType+","+dataValue);
+                  function(){console.log('success write: '+dataTypeCorrespondance[dataType]+","+dataDay+","+dataValue);
+                  addConsoleMessage('success write: '+dataTypeCorrespondance[dataType]+","+dataDay+","+dataValue);
                   changePicoProStatus("Connected! Data sent");
                   },
                   function(){addConsoleMessage('failure write: '+dataType+","+dataValue);
                   })
+    }
+    
+    
+    document.getElementById("showDebug").addEventListener("click", function(){showHideDebug();}, false);
+    // Hide or Show the debug messages
+    function showHideDebug(){
+        if (debugShowing==1){
+            document.getElementById("debug").setAttribute("style", "display: none;");
+            debugShowing=0;
+        }else{
+            document.getElementById("debug").setAttribute("style", "display: inline;");
+            debugShowing=1;
+        }
     }
     
     // Reset function
@@ -148,6 +169,9 @@ function onDeviceReady(){
     
     
     // ******* USE PLUGINS ****
+    //DEMO PURPOSE
+    document.getElementById("changePartOfTheDay").addEventListener("click", function(){sendPartOfTheDay();}, false);
+    
     //DEMO PURPOSE : update part of the day
     function sendPartOfTheDay(){
         if (partOfTheDay<4){
@@ -155,9 +179,54 @@ function onDeviceReady(){
         } else{
             partOfTheDay =1;
         }
+        document.getElementById("partOfTheDay").innerHTML = partOfTheDayCorrespondance[partOfTheDay-1];
         console.log("new part of the day: "+partOfTheDay);
         addConsoleMessage("new part of the day: "+partOfTheDay);
         sendData(4,0,partOfTheDay);
+    }
+    
+    // SEND THE USER NAME:
+    document.getElementById("sendName").addEventListener("click", function(){sendName();}, false);
+    
+    // transfrom a 2 digit number into a 3 digit string
+    // Ex : 23 -> '023', 244 -> '244'
+    function formatWithThreeDigits(number){
+        if (number<10){
+            return '00'+number;
+        } else if(number<100){
+            return '0'+number;
+        }else{
+            return ''+number;
+        }
+    }
+    // send the user name
+    function sendName(){
+        username = document.getElementById("username").value;
+        //alert("username: "+username);
+        var usernameASCIIformat= "" //organized by packets of 3 digits representing the 8-byte representation of the ASCII code of each character
+        for (var i=0;i<username.length;i++){
+            //alert(username[i]+" : "+username.charCodeAt(i));
+            usernameASCIIformat +=formatWithThreeDigits(username.charCodeAt(i).toString(8));
+        }
+        //alert(usernameASCIIformat);
+
+        var eightBitArray = new Uint8Array(usernameASCIIformat.length+1);
+        eightBitArray[0]=5; //indicate that it's the name of the user
+        for (var j=1; j<usernameASCIIformat.length+1;j++){
+            eightBitArray[j]=usernameASCIIformat[j-1];
+        }
+        //alert("eightBitArray: "+eightBitArray);
+        
+        ble.write(picoProId,
+                  serviceUUID,
+                  uuid_write,eightBitArray.buffer,
+                  function(){console.log('success write name: '+username);
+                  addConsoleMessage('success write name: '+username);
+                  changePicoProStatus("Connected! Data sent");
+                  },
+                  function(){addConsoleMessage('failure write: ');
+                  })
+      
     }
     
     // HEALTH KIT USE --- number of steps gathering
@@ -212,8 +281,6 @@ function onDeviceReady(){
         console.log("Error Steps: " + JSON.stringify(result));
     };
     
-    //DEMO PURPOSE
-    document.getElementById("changePartOfTheDay").addEventListener("click", function(){sendPartOfTheDay();}, false);
     
     // BLE USE
     document.getElementById("connect").addEventListener("click", function(){connectToPicoPro();}, false);
