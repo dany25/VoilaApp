@@ -14,7 +14,7 @@ function onDeviceReady(){
     // GLOBAL PARAMETERS
     
     //DEMO PURPOSE
-    var partOfTheDay = 2;
+    var partOfTheDay = 2; //We start the device in the afternoon
     var partOfTheDayCorrespondance = ['Morning','Afternoon','Evening','Night'];
     document.getElementById("partOfTheDay").innerHTML = partOfTheDayCorrespondance[partOfTheDay-1];
     var debugShowing = 0;
@@ -34,13 +34,14 @@ function onDeviceReady(){
     var numberOfPreviousDays = 10; //for steps count data
     
     //BLE
-    timeBeforeRescan = 60;//secondes
+    timeBeforeRescan = 10;//secondes
     var picoProFound = 0;
-    var picoProConnected =0;
+    //var picoProConnected =0;
     picoProId = ""; // Device ID = 26BB8695-343C-C300-0A2B-4AF8862412F0
     serviceUUID = "52B3CA23-6396-4DDC-BB67-9EB1FBBA28A7"; //service uuid
     uuid_read = "E0C8EC1E-40B3-4794-AA0B-936B83633219"; // caracteristics uuid read
     uuid_write = "59BD6D7a-09D1-45EC-BFEE-17344AD33116"; // caracteristics uuid write
+
     
     // TEMPERATURE
     var todayTemperature = 0;
@@ -65,9 +66,11 @@ function onDeviceReady(){
     }
     
     function addConsoleMessage(stringMsg){
-        document.getElementById("console").innerHTML += "<br>"+ "->  "+stringMsg;
+        var dateNow = new Date();
+        document.getElementById("console").innerHTML += "<br>"+ "["+dateNow.getHours()+":"+dateNow.getMinutes()+":"+dateNow.getSeconds()+" :  "+stringMsg;
     }
     
+    // General function send Data to PicoPro
     function sendData(dataType,dataDay, dataValue){
         var data = intTo8BitArray(dataType,dataDay,dataValue);
         console.log(JSON.stringify(data));
@@ -76,7 +79,7 @@ function onDeviceReady(){
         ble.write(picoProId,
                   serviceUUID,
                   uuid_write,data.buffer,
-                  function(){console.log('success write: '+dataTypeCorrespondance[dataType]+","+dataDay+","+dataValue);
+                  function(){console.log('success write: '+dataTypeCorrespondance[dataType]+",day: "+dataDay+",value: "+dataValue);
                   addConsoleMessage('success write: '+dataTypeCorrespondance[dataType]+","+dataDay+","+dataValue);
                   changePicoProStatus("Connected! Data sent");
                   },
@@ -104,6 +107,9 @@ function onDeviceReady(){
     
     //***** INITIALIZATION *******
     // BLE
+    // If the connection failed -> restart the all scan and connection process
+    // If the scan did not find the PicoPro after the scanning time -> restart the all scan and connection process
+    // If connection worked once -> set dataOnceSent = 1 -> [if connection lost ...] [else ...]
     //--> app screen
     changePicoProStatus("Looking for the pico pro ...");
     addConsoleMessage("Looking for the pico pro ...");
@@ -111,6 +117,121 @@ function onDeviceReady(){
     ble.isEnabled(
                   function() {
                   console.log("Bluetooth is enabled");
+                  startScanBLE();
+                  },
+                  function() {
+                  console.log("Bluetooth is *not* enabled");
+                  changePicoProStatus("Bluetooth is turned off, please turn it on and press reset.");
+                  }
+                  );
+    
+    function startScanBLE(){
+        
+        ble.scan([],timeBeforeRescan,
+                 function(device) {
+                 //bluetoothDeviceRecognized(device);
+                 isItPicoPro(device);
+                 console.log("new device found");
+                 }, onError);
+         
+        /*
+        ble.startScan([], function(device) {
+                      console.log(JSON.stringify(device));
+                      }, function(){console.log("startScan: error");});
+         */
+        
+        setTimeout(ble.stopScan,
+                   timeBeforeRescan*1000,
+                   function() {
+                   console.log("Scan complete");
+                   if (picoProFound==0){
+                    startScanBLE();
+                    }
+                   },
+                   function() { console.log("stopScan failed"); }
+                   );
+    }
+    
+    function isItPicoPro(device){
+        console.log(JSON.stringify(device));
+        if (device.advertising.kCBAdvDataServiceUUIDs == (serviceUUID)){ // Pico Pro Found !
+            //ble.stopScan(function(msg){console.log("Stop Scan: success");}, function(msg){console.log("failure Stop Scan");});
+            picoProFound = 1;
+            picoProId = device.id;
+            console.log("picopro id: "+ picoProId);
+            changePicoProStatus("PicoPro Found !");
+            connectToPicoPro();
+        }
+    }
+    
+    document.getElementById("connect").addEventListener("click", function(){connectToPicoPro();}, false);
+    document.getElementById("disconnect").addEventListener("click", function(){disconnectPicoPro();}, false);
+    
+    function connectToPicoPro(){
+        if (picoProFound == 0) {
+            //alert("The Pico Pro was not found yet, please wait...");
+            changePicoProStatus("The Pico Pro was not found yet, please wait...");
+        }
+        else{
+            ble.connect(picoProId,
+                        function(msg){connectSuccess(msg);},
+                        //TODO
+                        function(msg){connectError(msg);});
+        }
+    }
+    function disconnectPicoPro(){
+        ble.disconnect(picoProId, function(){
+                       addConsoleMessage("disconnect success");
+                       changePicoProStatus("Disconnected");
+                       }, function(){
+                       addConsoleMessage("disconnect error");
+                       });
+    }
+    
+    //converts an integer into an 8-bit array to communicate it to the PicoPro
+    function intTo8BitArray(intType,intDay,intValue){
+        var base8 = (intValue).toString(8);
+        var base8Day = (intDay).toString(8);
+        var base8Type = (intType).toString(8); // assume it's a single digit
+        var lengthArray =base8.length;
+        var eightBitArray = new Uint8Array(lengthArray+2);
+        for (var i =2; i<lengthArray+2;i++){
+            eightBitArray[i]= parseInt(base8[i-2],10);
+        }
+        eightBitArray[0]= parseInt(base8Type[0],10);
+        eightBitArray[1]= parseInt(base8Day[0],10);
+        return eightBitArray;
+    }
+    
+    function connectSuccess(msg){
+        console.log(msg);
+        changePicoProStatus("Connected !")
+        addConsoleMessage("Connected !");
+        //picoProConnected = 1;
+        //ble.stopScan(function(msg){console.log("Stop Scan: success");}, function(msg){console.log("failure Stop Scan");});
+        sendHealthData();
+        sendWeatherData();
+    }
+    
+    //TODO
+    function connectError(msg){
+        // restart the all process of scanning and connecting
+        //picoProConnected = 0;
+        picoProFound = 0;
+        //alert("connect error: "+JSON.stringify(msg));
+        console.log(msg);
+        console.log("Trying again to connect...");
+        changePicoProStatus("Connection lost ! ");
+        addConsoleMessage("Connection lost!");
+        startScanBLE();
+        //scanAndStopScan();
+    }
+    
+    /*
+    ble.isEnabled(
+                  function() {
+                  console.log("Bluetooth is enabled");
+                  scanAndStopScan();
                   },
                   function() {
                   console.log("Bluetooth is *not* enabled");
@@ -120,22 +241,25 @@ function onDeviceReady(){
     
     function scanAndStopScan(){
         console.log("try to scan ...");
-        ble.scan([], (timeBeforeRescan+1), function(device) {
+        ble.scan([], (timeBeforeRescan+1),
+                 function(device) {
                  bluetoothDeviceRecognized(device);
                  //console.log("new device found");
                  }, onError);
         setTimeout(function(){
                    if(picoProConnected==0){
                    ble.stopScan(function(msg){console.log("success Stop Scan");}, function(msg){console.log("failure Stop Scan");});
-                   scanAndStopScan();
+                       scanAndStopScan();
                    }
                    },timeBeforeRescan*1000);
 
     }
-    scanAndStopScan();
+    //scanAndStopScan();
+     */
     
     
     //--> If the pico pro is found --> we connect to it and send the data
+    /*
     function bluetoothDeviceRecognized(device) {
         console.log(JSON.stringify(device));
         if (device.advertising.kCBAdvDataServiceUUIDs == (serviceUUID)){
@@ -147,6 +271,7 @@ function onDeviceReady(){
             connectToPicoPro();
         }
     }
+     */
     
     
     // HEALTH KIT INITIALIZATION
@@ -282,86 +407,6 @@ function onDeviceReady(){
     };
     
     
-    // BLE USE
-    document.getElementById("connect").addEventListener("click", function(){connectToPicoPro();}, false);
-    function connectToPicoPro(){
-        if (picoProFound == 0) {
-            //alert("The Pico Pro was not found yet, please wait...");
-            changePicoProStatus("The Pico Pro was not found yet, please wait...");
-        }
-        else{
-            ble.connect(picoProId,
-                        function(msg){connectSuccess(msg);},
-                        function(msg){connectError(msg);});
-            //function(msg){alert("fail to connect "+ JSON.stringify(msg));});
-        }
-    }
-    
-    //converts an integer into an 8-bit array to communicate it to the PicoPro
-    function intTo8BitArray(intType,intDay,intValue){
-        var base8 = (intValue).toString(8);
-        var base8Day = (intDay).toString(8);
-        var base8Type = (intType).toString(8); // assume it's a single digit
-        var lengthArray =base8.length;
-        var eightBitArray = new Uint8Array(lengthArray+2);
-        for (var i =2; i<lengthArray+2;i++){
-            eightBitArray[i]= parseInt(base8[i-2],10);
-        }
-        eightBitArray[0]= parseInt(base8Type[0],10);
-        eightBitArray[1]= parseInt(base8Day[0],10);
-        return eightBitArray;
-    }
-    
-    function connectSuccess(msg){
-        console.log(msg);
-        changePicoProStatus("Connected !")
-        addConsoleMessage("Connected !");
-        picoProConnected = 1;
-        ble.stopScan(function(msg){console.log("success Stop Scan");}, function(msg){console.log("failure Stop Scan");});
-        
-        //TIME
-        /*
-        var d = new Date();
-        var dataToWrite = d.getHours()*3600+d.getMinutes()*60+d.getSeconds();
-        var dataTypeToWrite = 4;
-        alert(d.getHours()+":"+d.getMinutes()+":"+d.getSeconds());
-        alert(d.getHours()*3600+d.getMinutes()*60+d.getSeconds());
-        var data = intTo8BitArray(dataTypeToWrite,dataToWrite);
-        console.log(JSON.stringify(data));
-        console.log(data);
-        
-        ble.write(picoProId,
-                  serviceUUID,
-                  uuid_write,data.buffer,
-                  function(){console.log('success write');},
-                  function(){alert('failure write');
-                  })
-         */
-        
-        sendHealthData();
-        sendWeatherData();
-    
-        
-        /*
-        console.log("Reading...");
-        ble.read(picoProId,
-                 serviceUUID,
-                 uuid_read,
-                 function(msg){alert('success read '  +JSON.stringify(msg));},
-                 function(msg){alert('failure read '+msg);})
-        */
-    }
-    
-    function connectError(msg){
-        picoProConnected = 0;
-        picoProFound = 0;
-        //alert("connect error: "+JSON.stringify(msg));
-        console.log(msg);
-        console.log("Trying again to connect...");
-        changePicoProStatus("Connection lost ! ");
-        addConsoleMessage("Connection lost!");
-        scanAndStopScan();
-    }
     
     // WEATHER PLUGIN USE
     document.getElementById("getPosition").addEventListener("click", sendWeatherData);
@@ -431,6 +476,38 @@ function onDeviceReady(){
         console.log('code: ' + error.code + '\n' +
                     'message: ' + error.message + '\n');
     }
+    
+    
+    // Archives of potential useful attempt:
+    //TIME
+    /*
+     var d = new Date();
+     var dataToWrite = d.getHours()*3600+d.getMinutes()*60+d.getSeconds();
+     var dataTypeToWrite = 4;
+     alert(d.getHours()+":"+d.getMinutes()+":"+d.getSeconds());
+     alert(d.getHours()*3600+d.getMinutes()*60+d.getSeconds());
+     var data = intTo8BitArray(dataTypeToWrite,dataToWrite);
+     console.log(JSON.stringify(data));
+     console.log(data);
+     
+     ble.write(picoProId,
+     serviceUUID,
+     uuid_write,data.buffer,
+     function(){console.log('success write');},
+     function(){alert('failure write');
+     })
+     */
+    
+    
+    // BLE - reading
+    /*
+     console.log("Reading...");
+     ble.read(picoProId,
+     serviceUUID,
+     uuid_read,
+     function(msg){alert('success read '  +JSON.stringify(msg));},
+     function(msg){alert('failure read '+msg);})
+     */
     
     
     
