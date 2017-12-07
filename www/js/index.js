@@ -8,6 +8,8 @@ if (navigator.userAgent.match(/(iPhone|iPod|iPad|Android|BlackBerry)/)) {
 function onDeviceReady(){
     
     document.getElementById("console").innerHTML = "";
+    document.getElementById("username").value = "";
+    document.getElementById("newQuestion").value = "";
     
     
     //***** PARAMETERS *******
@@ -23,9 +25,12 @@ function onDeviceReady(){
     // USERNAME
     var username = "";
     
+    //NEW QUESTION
+    var newQuestion = "";
+    
     //Data and Data Type Info
-    dataTypeCorrespondance = ['kms','steps','temp','icon','partDay','username']
-    // data type: 0 kms/milage info; 1 steps info; 2 temperature; 3 icon weather; 4//DEMO PURPOSE Part of the day; 5 name
+    dataTypeCorrespondance = ['kms','steps','temp','icon','partDay','username','newQuest']
+    // data type: 0 kms/milage info; 1 steps info; 2 temperature; 3 icon weather; 4//DEMO PURPOSE Part of the day; 5 name; 6 newQuestion
     // Example [dataType, J-x, dataValue]
     // Example [1,0,1234] = 1234 steps today
     // Example [1,2,124] = 124 steps 2 days ago
@@ -101,7 +106,9 @@ function onDeviceReady(){
     }
     
     // Reset function
-    document.getElementById("reset").addEventListener("click", function(){onDeviceReady();}, false);
+    document.getElementById("reset").addEventListener("click", function(){window.location.reload();
+                                                      //onDeviceReady();
+                                                      }, false);
     
     
     
@@ -109,7 +116,7 @@ function onDeviceReady(){
     // BLE
     // If the connection failed -> restart the all scan and connection process
     // If the scan did not find the PicoPro after the scanning time -> restart the all scan and connection process
-    // If connection worked once -> set dataOnceSent = 1 -> [if connection lost ...] [else ...]
+    // If connection worked once -> set dataOnceSent = 1 -> wait 15 min before sending the updated data [if connection lost ...] [else ...]
     //--> app screen
     changePicoProStatus("Looking for the pico pro ...");
     addConsoleMessage("Looking for the pico pro ...");
@@ -155,7 +162,7 @@ function onDeviceReady(){
     function isItPicoPro(device){
         console.log(JSON.stringify(device));
         if (device.advertising.kCBAdvDataServiceUUIDs == (serviceUUID)){ // Pico Pro Found !
-            //ble.stopScan(function(msg){console.log("Stop Scan: success");}, function(msg){console.log("failure Stop Scan");});
+            ble.stopScan(function(msg){console.log("Stop Scan: success");}, function(msg){console.log("failure Stop Scan");});
             picoProFound = 1;
             picoProId = device.id;
             console.log("picopro id: "+ picoProId);
@@ -295,15 +302,28 @@ function onDeviceReady(){
     
     // ******* USE PLUGINS ****
     //DEMO PURPOSE
-    document.getElementById("changePartOfTheDay").addEventListener("click", function(){sendPartOfTheDay();}, false);
+    document.getElementById("changePartOfTheDay").addEventListener("click", function(){warperUpdateAndSendPartOfTheDay();}, false);
+    
+    
+    
     
     //DEMO PURPOSE : update part of the day
-    function sendPartOfTheDay(){
+    function updateAndSendPartOfTheDay(_callback){
         if (partOfTheDay<4){
             partOfTheDay +=1;
         } else{
             partOfTheDay =1;
         }
+        _callback();
+    }
+    
+    function warperUpdateAndSendPartOfTheDay(){
+        updateAndSendPartOfTheDay(function() {
+                                  sendPartOfTheDay();
+                                  });
+    }
+    
+    function sendPartOfTheDay(){
         document.getElementById("partOfTheDay").innerHTML = partOfTheDayCorrespondance[partOfTheDay-1];
         console.log("new part of the day: "+partOfTheDay);
         addConsoleMessage("new part of the day: "+partOfTheDay);
@@ -312,6 +332,9 @@ function onDeviceReady(){
     
     // SEND THE USER NAME:
     document.getElementById("sendName").addEventListener("click", function(){sendName();}, false);
+    
+    // SEND A NEW QUESTION
+    document.getElementById("sendNewQuestion").addEventListener("click", function(){sendNewQuestion();}, false);
     
     // transfrom a 2 digit number into a 3 digit string
     // Ex : 23 -> '023', 244 -> '244'
@@ -324,6 +347,7 @@ function onDeviceReady(){
             return ''+number;
         }
     }
+    
     // send the user name
     function sendName(){
         username = document.getElementById("username").value;
@@ -352,6 +376,41 @@ function onDeviceReady(){
                   function(){addConsoleMessage('failure write: ');
                   })
       
+    }
+    
+    // send the user's new question
+    function sendNewQuestion(){
+        newQuestion = document.getElementById("newQuestion").value;
+        var r = confirm("Is it the question you want to send ? "+ '\n'+newQuestion);
+        if (r == true) {
+            var newQuestionASCIIformat= "" //organized by packets of 3 digits representing the 8-byte representation of the ASCII code of each character
+            for (var i=0;i<newQuestion.length;i++){
+                //alert(username[i]+" : "+username.charCodeAt(i));
+                newQuestionASCIIformat +=formatWithThreeDigits(newQuestion.charCodeAt(i).toString(8));
+            }
+            //alert(newQuestionASCIIformat);
+            
+            var eightBitArray = new Uint8Array(newQuestionASCIIformat.length+2);
+            eightBitArray[0]=6; //indicate that it's the user's new question
+            eightBitArray[1]=2; //part of the day of the new question
+            
+            
+            for (var j=2; j<newQuestionASCIIformat.length+2;j++){
+                eightBitArray[j]=newQuestionASCIIformat[j-2];
+            }
+            //alert("eightBitArray: "+eightBitArray);
+            
+            ble.write(picoProId,
+                      serviceUUID,
+                      uuid_write,eightBitArray.buffer,
+                      function(){console.log('success write newQuestion: '+newQuestion);
+                      addConsoleMessage('success write newQuestion: '+newQuestion);
+                      changePicoProStatus("Connected! Data sent");
+                      },
+                      function(){addConsoleMessage('failure write: ');
+                      })
+             
+        }
     }
     
     // HEALTH KIT USE --- number of steps gathering
@@ -409,7 +468,6 @@ function onDeviceReady(){
     
     
     // WEATHER PLUGIN USE
-    document.getElementById("getPosition").addEventListener("click", sendWeatherData);
     
     function sendWeatherData() {
         var options = {
